@@ -2,9 +2,10 @@
 	$test = false;
 
 	if (!$test) {
-		$db = mysqli_connect('localhost', 'album', 'testpass1', 'album');
+		$mysqli = new mysqli('localhost', 'album', 'testpass1', 'album');
+
 		if(isset($_POST['collection'])) {
-			$collection_id = mysqli_real_escape_string($db, $_POST['collection']);
+			$collection_id = $_POST['collection'];
 		}
 		else
 		{
@@ -13,15 +14,14 @@
 
 		$results = array();
 
-		$get_images = <<<SQL
-			select filename from album_photos
-			where collection_id = $collection_id
-			and visible = 'Yes'
-SQL;
+		$stmt = $mysqli->prepare("SELECT filename FROM album_photos WHERE collection_id = ? AND visible = 'Yes'");
 
-		$image_query = mysqli_query($db, $get_images) or die(mysqli_error($db));
+		$stmt->bind_param("i", $collection_id);
+		
+		$stmt->execute();
+		$result = $stmt->get_result();
 
-		while($image_row = mysqli_fetch_array($image_query)) {
+		while($image_row = $result->fetch_assoc()) {
 			$results[] = array("image_filename" => $image_row['filename']);
 		}
 	}
